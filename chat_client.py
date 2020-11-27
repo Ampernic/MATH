@@ -6,6 +6,10 @@ from colorama import init, Fore, Back, Style
 import socket
 import threading
 import time
+from win10toast import ToastNotifier
+import getpass
+
+toaster = ToastNotifier()
 
 init(convert=True)
 
@@ -18,9 +22,10 @@ print("\033[36m" + """
     ╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝
 
     -----------------------------------
-    Version: Alpha 1_0.5
+    Version: Alpha 1_0.6.2
     Author: Wiskey666
-    Mail: 1488step@horsefucker.org
+    Forked: Ampernic
+    Mail: ampernic@inbox.ru
     DS: yourmomgay#1488
     -----------------------------------
 
@@ -30,7 +35,7 @@ print("\033[36m" + """
 
     -----------------------------------
         IP     Port        Name
-    aoa.pp.ua  8080  #general_server
+    aoa.pp.ua  55555  #general_server
     -----------------------------------
 """)
 print(Style.RESET_ALL)
@@ -54,11 +59,15 @@ def receive():
         try:
             # Receive Message From Server
             # If 'NICK' Send Nickname
-            message = client.recv(1024).decode('ascii')
+            message = client.recv(1024).decode('utf-8')
             if message == 'NICK':
-                client.send(nickname.encode('ascii'))
+                client.send(nickname.encode('utf-8'))
             else:
                 print(Fore.GREEN +'░' + Fore.YELLOW + '░' + Fore.GREEN + '░ ' + Fore.WHITE + message)
+                if "<"+ nickname +">" in message or "[+]" in message or "[-]" in message:
+                    continue
+                else:
+                   toaster.show_toast("MATH", message, threaded=True)
                 #print(Style.RESET_ALL)
         except:
             # Close Connection When Error 
@@ -71,7 +80,7 @@ def write():
     while True:
         try:
             message = '<{}> {}'.format(nickname, input(''))
-            client.send(message.encode('ascii'))
+            client.send(message.encode('utf-8'))
         except:
             pass
 
@@ -81,4 +90,3 @@ receive_thread.start()
 
 write_thread = threading.Thread(target=write)
 write_thread.start()
-

@@ -16,8 +16,9 @@ print("\033[36m" + """
     ╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝
 
     -----------------------------------
-    Version: Alpha 1_0.5
+    Version: Alpha 1_0.6.2
     Author: Wiskey666
+    Forked: Ampernic
     Mail: 1488step@horsefucker.org
     DS: yourmomgay#1488
     -----------------------------------
@@ -61,7 +62,7 @@ def handle(client):
             clients.remove(client)
             client.close()
             nickname = nicknames[index]
-            broadcast('[-] {} left the server!'.format(nickname).encode('ascii'))
+            broadcast('[-] {} left the server!'.format(nickname).encode('utf-8'))
             nicknames.remove(nickname)
             break
 
@@ -73,20 +74,18 @@ def receive():
         print("[+] Connected with {}".format(str(address)))
 
         # Request And Store Nickname
-        client.send('NICK'.encode('ascii'))
-        nickname = client.recv(1024).decode('ascii')
+        client.send('NICK'.encode('utf-8'))
+        nickname = client.recv(1024).decode('utf-8')
         nicknames.append(nickname)
         clients.append(client)
 
         # Print And Broadcast Nickname
         print("Nickname is {}".format(nickname))
-        broadcast("[+] {} joined!".format(nickname).encode('ascii'))
-        client.send('[+] Connected to #general_server!'.encode('ascii'))
+        broadcast("[+] {} joined!".format(nickname).encode('utf-8'))
+        client.send('[+] Connected to #general_server!'.encode('utf-8'))
 
         # Start Handling Thread For Client
         thread = threading.Thread(target=handle, args=(client,))
         thread.start()
 
 receive()
-
-
