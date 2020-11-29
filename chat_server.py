@@ -6,6 +6,7 @@ import socket
 import threading
 import os
 import time
+import sys
 
 init(convert=True)
 
@@ -51,7 +52,7 @@ print(Fore.CYAN + """
     ╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝
 """ + "\33[90m" + """
     -----------------------------------""" + Fore.CYAN + """
-    Version: Alpha 1_0.6.5
+    Version: Alpha 1_1
     Author: Wiskey666
     Forked by: Ampernic
     Mail: ampernic@list.ru
@@ -66,17 +67,38 @@ print(Fore.CYAN + """
     """+ Fore.WHITE)
 
 # Connection Data
-host= input('    Set host IP: ')
-port= int(input('    Set host port: '))
+try:
+    host = input('    Set host IP: ')
+    if host == '':
+        print(Fore.YELLOW + "\n    [!]  Please enter IP!")
+        time.sleep(5)
+        sys.exit() 
+except:
+    print(Fore.YELLOW + "\n    [!]  Invalid address format!")
+    time.sleep(5)
+    sys.exit() 
+
+try:
+    port = int(input('    Set host port: '))
+except ValueError:
+    print(Fore.YELLOW + "\n    [!]  Port must be an integer!")
+    time.sleep(5)
+    sys.exit() 
+    
 channel_name = "#" + input('    Set channel name: ')
-ver= 'Alpha 1_0.6.5'
+ver= 'Alpha 1_1'
 
 print("\33[90m" + """
     -----------------------------------"""+ Fore.WHITE)
 
 # Starting Server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind((host, port))
+try:
+    server.bind((host, port))
+except:
+    print(Fore.YELLOW + "\n    [!]  The given IP or port is busy!")
+    time.sleep(5)
+    sys.exit() 
 server.listen()
 
 # Lists For Clients and Their Nicknames
@@ -87,6 +109,11 @@ nicknames = []
 def broadcast(message):
     for client in clients:
         client.send(message)
+
+# Client Kick Function   
+def close_client(client):
+    clients.remove(client)
+    client.close()
 
 # Handling Messages From Clients
 def handle(client):
@@ -118,36 +145,48 @@ def receive():
         client.send('NICK'.encode('utf-8'))
         nickname = client.recv(1024).decode('utf-8')
         client_ver = client.recv(1024).decode('utf-8')
-        nicknames.append(nickname)
         clients.append(client)
        
-
-        # Print And Broadcast Nickname
-        print("    Nickname is {}".format(nickname))
-        # Checking Version
+        # Checking Nickname
+        if nickname in nicknames:
+            print("    Nickname is {}".format(nickname) + Fore.RED + " (ALREADY EXISTS!)" + Fore.WHITE)
+            # If Old - Kick Him
+            if client in clients:
+                client.send("[-] You have been kicked from the server! Code 401".encode('utf-8'))
+                close_client(client)
+            check_ver(client_ver, ver, client, clients, nickname, address)
+            broadcast('[!] {} try to connect again... Already exist!'.format(nickname).encode('utf-8'))
+            print(Fore.YELLOW + "[!] {} {} kicked from the server! Already exist.".format(nickname, str(address)) + Fore.WHITE)
+            print("\33[90m" + """    -----------------------------------"""+ Fore.WHITE)
+        else:
+            print("    Nickname is {}".format(nickname))
+            nicknames.append(nickname)
+            is_normal = check_ver(client_ver, ver, client, clients, nickname, address)
+            if is_normal == True:
+                thread = threading.Thread(target=handle, args=(client,))
+                thread.start()
+                client.send("[+] Connected to {}!".format(channel_name).encode('utf-8'))
+                broadcast("[+] {} joined!".format(nickname).encode('utf-8'))    
+            
+# Checking Version Function
+def check_ver(client_ver, ver, client, clients, nickname, address):
         if client_ver == ver:
+            # If All Is Good - Go Next
             print("    Client version: " + client_ver)
             print("\33[90m" + """    -----------------------------------"""+ Fore.WHITE)
-            broadcast("[+] {} joined!".format(nickname).encode('utf-8'))
-            client.send("[+] Connected to {}!".format(channel_name).encode('utf-8'))
+            return True
         else:
             print("    Client version: " + client_ver + Fore.RED + " (TOO OLD!)" + Fore.WHITE)
             print("\33[90m" + """    -----------------------------------"""+ Fore.WHITE)
-            client.send("[-] You have been kicked from the server! Code 409".encode('utf-8'))
-            
-        # Check Version Of Client
-        if client_ver == ver:
-            # If All Is Good - Start Handling Thread For Client
-            thread = threading.Thread(target=handle, args=(client,))
-            thread.start()
-        else:
             # If Old - Kick Him
-            broadcast('[-] {} kicked from the server! Too old version.'.format(nickname).encode('utf-8'))
-            print(Fore.YELLOW + "[-] {} kicked from the server! Too old version.".format(nickname) + Fore.WHITE)
-            clients.remove(client)
-            client.close()
+            if client in clients:
+                print(Fore.YELLOW + "[-] {} {} kicked from the server! Too old version.".format(nickname, str(address)) + Fore.WHITE)
+                client.send("[-] You have been kicked from the server! Code 409".encode('utf-8'))
+                close_client(client)
+                broadcast('[-] {} kicked from the server! Too old version.'.format(nickname).encode('utf-8'))
+                print("\33[90m" + """    -----------------------------------"""+ Fore.WHITE)
             nicknames.remove(nickname)
-            print("\33[90m" + """    -----------------------------------"""+ Fore.WHITE)
+            return False
 
 #Start Listening
 receive()

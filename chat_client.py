@@ -59,7 +59,7 @@ print(Fore.CYAN + """
     ╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝
 """ + "\33[90m" + """
     -----------------------------------""" + Fore.CYAN + """
-    Version: Alpha 1_0.6.5
+    Version: Alpha 1_1
     Author: Wiskey666
     Forked by: Ampernic
     Mail: ampernic@list.ru
@@ -75,18 +75,43 @@ print(Fore.CYAN + """
 
 # Client Settings
 IP = input('    IP: ')
-PORT = int(input('    Port: '))
-ver = "Alpha 1_0.6.5"
+if IP == '':
+    print(Fore.YELLOW + "\n    [!] Please enter IP!")
+    time.sleep(5)
+    sys.exit()
+    
+try:
+    PORT = int(input('    Port: '))
+    if PORT == '':
+        print(Fore.YELLOW + "\n    [!] Please enter port!")
+        time.sleep(5)
+        sys.exit()   
+except ValueError:
+    print(Fore.YELLOW + "\n    [!] Port must be an integer!")
+    time.sleep(5)
+    sys.exit()
+    
+ver = "Alpha 1_1"
 
 # Choosing Nickname
 nickname = input('    Username: ')
+if nickname == '':
+    print(Fore.YELLOW + "\n    [!] Please enter nickname!")
+    time.sleep(5)
+    sys.exit()
 
 print("""
     -----------------------------------    
 """)
 # Connecting To Server
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((IP, PORT))
+try:
+    client.connect((IP, PORT))
+except socket.error as e:
+    if e.errno == errno.ECONNREFUSED:
+        print(Fore.YELLOW + "\n    [!] Server refused connection or unavailable")
+    else:
+        raise
 
 # Listening to Server and Sending Nickname
 def receive():
@@ -101,6 +126,10 @@ def receive():
                 print(Fore.GREEN +'░' + Fore.YELLOW + '░' + Fore.GREEN + '░ ' + Fore.WHITE + message)
                 client.close()
                 break
+            if "Code 401" in message:
+                print(Fore.GREEN +'░' + Fore.YELLOW + '░' + Fore.GREEN + '░ ' + Fore.WHITE + message)
+                client.close()
+                break
             else:
                 # If 'NICK' Send Nickname
                 if message == 'NICK':
@@ -109,7 +138,7 @@ def receive():
                 else:
                     print(Fore.GREEN +'░' + Fore.YELLOW + '░' + Fore.GREEN + '░ ' + Fore.WHITE + message)
                     #Check For New Messages
-                    if "<"+ nickname +">" in message or "[+]" in message or "[-]" in message:
+                    if "<"+ nickname +">" in message or "[+]" in message or "[-]" in message or "[!]" in message:
                         continue
                     else:
                        toaster.show_toast("MATH", message, threaded=True)
@@ -117,8 +146,6 @@ def receive():
             # Close Connection When Error 
             print(Fore.GREEN +'>' + Fore.YELLOW + '>' + Fore.GREEN + '> ' + Fore.RED + "[-] An error occured!")
             client.close()
-            break
-        
 # Sending Messages To Server
 def write():
     while True:
