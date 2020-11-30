@@ -52,7 +52,7 @@ print(Fore.CYAN + """
     ╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝
 """ + "\33[90m" + """
     -----------------------------------""" + Fore.CYAN + """
-    Version: Alpha 1_1
+    Version: Alpha 1_1.0.1
     Author: Wiskey666
     Forked by: Ampernic
     Mail: ampernic@list.ru
@@ -86,7 +86,7 @@ except ValueError:
     sys.exit() 
     
 channel_name = "#" + input('    Set channel name: ')
-ver= 'Alpha 1_1'
+ver= 'Alpha 1_1.0.1'
 
 print("\33[90m" + """
     -----------------------------------"""+ Fore.WHITE)

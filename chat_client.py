@@ -59,7 +59,7 @@ print(Fore.CYAN + """
     ╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝
 """ + "\33[90m" + """
     -----------------------------------""" + Fore.CYAN + """
-    Version: Alpha 1_1
+    Version: Alpha 1_1.0.1
     Author: Wiskey666
     Forked by: Ampernic
     Mail: ampernic@list.ru
@@ -91,7 +91,7 @@ except ValueError:
     time.sleep(5)
     sys.exit()
     
-ver = "Alpha 1_1"
+ver = "Alpha 1_1.0.1"
 
 # Choosing Nickname
 nickname = input('    Username: ')
@@ -104,14 +104,18 @@ print("""
     -----------------------------------    
 """)
 # Connecting To Server
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-try:
-    client.connect((IP, PORT))
-except socket.error as e:
-    if e.errno == errno.ECONNREFUSED:
-        print(Fore.YELLOW + "\n    [!] Server refused connection or unavailable")
-    else:
-        raise
+def connect():
+    global client
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        client.connect((IP, PORT))
+        connected = True
+    except socket.error as e:
+        if e.errno == errno.ECONNREFUSED:
+            print(Fore.YELLOW + "\n    [!] Server refused connection or unavailable")
+        else:
+            raise
+connect()
 
 # Listening to Server and Sending Nickname
 def receive():
@@ -143,9 +147,17 @@ def receive():
                     else:
                        toaster.show_toast("MATH", message, threaded=True)
         except:
-            # Close Connection When Error 
-            print(Fore.GREEN +'>' + Fore.YELLOW + '>' + Fore.GREEN + '> ' + Fore.RED + "[-] An error occured!")
+            # Close Connection When Error
+            print(Fore.GREEN +'>' + Fore.YELLOW + '>' + Fore.GREEN + '> ' + Fore.RED + "[-] An error occured!" + Fore.WHITE)
             client.close()
+            reconnect = input("    Connection lost... Try reconnect? (Y/n): ")
+            if reconnect == "Y" or reconnect == "Y":
+                connect()
+            else:
+                print("\n    Thanks for using our client ... Goodbye ...")
+                time.sleep(4)
+                sys.exit()
+            
 # Sending Messages To Server
 def write():
     while True:
