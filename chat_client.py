@@ -8,6 +8,7 @@ import socket
 import threading
 import time
 import os
+import psutil
 
 from win10toast import ToastNotifier
 
@@ -155,8 +156,9 @@ def receive():
                 connect()
             else:
                 print("\n    Thanks for using our client ... Goodbye ...")
-                time.sleep(4)
-                sys.exit()
+                time.sleep(2)
+                p = psutil.Process(os.getpid())
+                p.terminate() 
             
 # Sending Messages To Server
 def write():
